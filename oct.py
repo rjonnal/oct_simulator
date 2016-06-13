@@ -24,7 +24,11 @@ class OCT:
         max_rad = np.sqrt(xmax**2+ymax**2)
         q = np.linspace(0,max_rad,2**16)
         self.radial_psf = np.exp(-q**2/(2*(self.psf_sigma**2)))
-        self.beam_radius = q[np.where(self.radial_psf<.1)[0][0]]
+        self.beam_radius = q[np.where(self.radial_psf<.05)[0][0]]
+        # make an empty depth profile and axis vector; these are
+        # filled with scattering coefficients at imaging time
+        # first compute maximum depth:
+        
 
     def psf_radial_intensity(self,q):
         return np.exp(-q**2/(2*(self.psf_sigma**2)))
