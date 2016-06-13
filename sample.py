@@ -118,7 +118,7 @@ class Sample:
         vx = np.random.randn()*1e-3
         vy = np.random.randn()*1e-3
         vz = np.random.randn()*1e-3
-        coef = np.random.rand()*1e-6
+        coef = np.random.rand()*1e-3
         s = Scatterer(x,y,z,vx,vy,vz,coef=coef)
         self.add_scatterer(s)
 
