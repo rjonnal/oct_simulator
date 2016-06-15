@@ -4,7 +4,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 class Scatterer:
 
-    def __init__(self,x0,y0,z0,vx=0.0,vy=0.0,vz=0.0,coef=1.0e-6):
+    def __init__(self,x0,y0,z0,vx=0.0,vy=0.0,vz=0.0,coef=1.0e-3):
         # coef is the fraction of photons returned to the pupil
         self.x = x0
         self.y = y0
@@ -18,9 +18,12 @@ class Scatterer:
         self.coef = coef
 
     def update(self,dt,xmax,ymax,zmax):
-        self.x = (self.x + self.vx*dt)%xmax
-        self.y = (self.y + self.vy*dt)%ymax
-        self.z = (self.z + self.vz*dt)%zmax
+        if self.vx*xmax:
+            self.x = (self.x + self.vx*dt)%xmax
+        if self.vy*ymax:
+            self.y = (self.y + self.vy*dt)%ymax
+        if self.vz*zmax:
+            self.z = (self.z + self.vz*dt)%zmax
 
     def reset(self):
         self.x = self.x0

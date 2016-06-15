@@ -45,13 +45,15 @@ class OCT:
         LN = source.L[-1]
         n = 1.38
         Sz = 1.0/((2*n)/L1 - (2*n)/LN)
+        self.Sz = Sz
         self.zmax = Sz*npx
         self.z_axis = np.arange(0.0,self.zmax,dz)
         self.z = np.zeros(self.z_axis.shape)
         self.nvol = int(nvol)
         self.nbm = 1
         self.photons_per_adu = photons_per_adu
-
+        self.dc = self.compute_dc()
+        
     def write_xml(self,fn):
         monsterlist = ET.Element("MonsterList")
         monsterlist.set("version","1.o")
@@ -111,8 +113,12 @@ class OCT:
         return effective_scatterers
 
 
-    def compute_spectrum(self):
-        scatterers = self.find_scatterers()
+    def compute_dc(self):
+        return self.compute_spectrum([])
+    
+    def compute_spectrum(self,scatterers=None):
+        if scatterers is None:
+            scatterers = self.find_scatterers()
 
         in_z_axis = []
         in_z = []
@@ -127,8 +133,15 @@ class OCT:
                 coef = s.coef*blur*self.s_frac
                 in_z.append(coef)
 
-                left = np.where(self.z_axis<s.z)[0][-1]
-                right = np.where(self.z_axis>=s.z)[0][0]
+                try:
+                    left = np.where(self.z_axis<s.z)[0][-1]
+                except IndexError:
+                    left = 0
+
+                try:
+                    right = np.where(self.z_axis>=s.z)[0][0]
+                except IndexError:
+                    right = -1
 
                 tot = self.z_axis[right]-self.z_axis[left]
                 left_weight = 1.0 - (np.abs(self.z_axis[left]-s.z))/tot
@@ -172,7 +185,25 @@ class OCT:
                     if do_plot:
                         self.plot()
                     out[ivol,iy,ix,:] = adu
+        return out
 
+    def acquire_bscan(self,ypos=0.0):
+        spectra = np.zeros((self.nx,self.npx))
+        self.x = 0.0
+        self.y = ypos
+        for ix in range(self.nx):
+            adu = self.update()
+            noise = np.random.randn(len(adu))*np.sqrt(self.dc)
+            adu = adu + noise
+            #plt.plot(adu-dc)
+            #plt.plot(np.abs(np.fft.fftshift(np.fft.fft(adu-dc))))
+            #plt.show()
+            spectra[ix,:] = adu
+
+        return np.fft.fftshift(np.fft.fft((spectra-self.dc).T,axis=0),axes=0)
+                    
+    def acquire_to_file(self,fn='test',do_plot=False):
+        out = self.acquire(fn,do_plot)
         fnroot = os.path.splitext(fn)[0]
         dfn = fnroot+'.unp'
         xfn = fnroot+'.xml'
