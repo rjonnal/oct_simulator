@@ -58,17 +58,36 @@ if do_simulation:
     #plt.show()
 
 
-def SNR(im,method):
+def SNR(im):
     noise = np.std(np.hstack((im[:,0:30],im[:,70:])))
+    return im/noise
+
+def plot_SNR(im,method):
+    snr = SNR(im)
     plt.figure()
-    plt.imshow(im/noise,interpolation='none',aspect='auto')
+    plt.imshow(snr,interpolation='none',aspect='auto')
     plt.colorbar()
     plt.title(method)
-    fn = 'SNR_%s.png'%method.replace('(','_').replace(')','').replace(' ','_')
+    fn = 'SNR_%s.png'%method.replace('(','_').replace(')','').replace(' ','_').replace('$','').replace('\\','')
     plt.savefig(fn)
     #plt.pause(1)
     #plt.close()
     plt.show()
+
+def angular_statistics(phase_stack):
+    """Return the angluar (circular) statistics for a stack of phasors:
+       X, Y, r, cosa, sina, theta:
+       X and Y are rectangular coordinates of the mean angle
+       r is the length of the mean unit phasor
+       cosa and sina are cosine and sine of the mean angle
+       theta is the mean angle"""
+    X = np.mean(np.cos(phase_stack),axis=0)
+    Y = np.mean(np.sin(phase_stack),axis=0)
+    r = np.sqrt(X**2+Y**2)
+    cosa = X/r
+    sina = Y/r
+    theta = np.arctan(sina/cosa)
+    return X,Y,r,cosa,sina,theta
     
 if stack_frames:
     for iframe in range(N_frames):
@@ -84,22 +103,53 @@ if stack_frames:
 else:
     stack = np.load(os.path.join(outdir,'stack.npy'))
     stack = stack[:,1:,:]
+    X, Y, r, cosa, sina, theta = angular_statistics(np.angle(stack))
 
-    cvar = np.abs(np.var(stack,axis=0))
-    SNR(cvar,'abs(var(c))')
 
-    cvar = np.abs(np.var(stack[::3],axis=0))
-    SNR(cvar,'abs(var(c)) skip 2')
+
+    plt.subplot(2,2,1)
+    im = np.abs(np.var(stack,axis=0))
+    plt.imshow(SNR(im),interpolation='none',aspect='auto')
+    plt.title('complex variance SNR')
+    plt.colorbar()
+    plt.subplot(2,2,2)
+    im = np.var(np.angle(stack),axis=0)
+    plt.imshow(SNR(im),interpolation='none',aspect='auto')
+    plt.title('phase variance SNR')
+    plt.colorbar()
+    plt.subplot(2,2,3)
+    im = np.var(np.abs(stack),axis=0)
+    plt.imshow(SNR(im),interpolation='none',aspect='auto')
+    plt.title('amplitude variance SNR')
+    plt.colorbar()
+    plt.subplot(2,2,4)
+    plt.imshow(SNR(1.0-r),interpolation='none',aspect='auto')
+    plt.title('circular variance SNR')
+    plt.colorbar()
+    plt.show()
+    # cvar = np.abs(np.var(stack,axis=0))
+    # plot_SNR(cvar,'absolute complex variance')
+
+    # cvar = np.abs(np.var(stack[::3],axis=0))
+    # plot_SNR(cvar,'absolute complex variance 1 of 3')
     
-    cvar = np.var(np.angle(stack),axis=0)
-    SNR(cvar,'var(phase)')
+    # cvar = np.var(np.angle(stack),axis=0)
+    # plot_SNR(cvar,'phase variance')
 
-    cvar = np.var(np.abs(stack),axis=0)
-    SNR(cvar,'var(amp)')
+    # cvar = np.var(np.abs(stack),axis=0)
+    # plot_SNR(cvar,'amplitude variance')
 
-    cvar = np.var(np.angle(stack[::3]),axis=0)
-    SNR(cvar,'var(phase) skip 2')
+    # cvar = np.var(np.angle(stack[::3]),axis=0)
+    # plot_SNR(cvar,'phase variance 1 of 3')
 
-    cvar = np.var(np.abs(stack[::3]),axis=0)
-    SNR(cvar,'var(amp) skip 2')
+    # cvar = np.var(np.abs(stack[::3]),axis=0)
+    # plot_SNR(cvar,'amplitude variance 1 of 3')
 
+    # plot_SNR(X,'X')
+    # plot_SNR(Y,'Y')
+    # plot_SNR(r,'r')
+    # plot_SNR(cosa,'cosa')
+    # plot_SNR(sina,'sina')
+    # plot_SNR(theta,'theta')
+
+    plot_SNR(2*np.pi-r,'$2\pi - r$')
