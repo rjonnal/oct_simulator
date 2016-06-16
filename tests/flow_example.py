@@ -22,6 +22,56 @@ sample = Sample(xmax,ymax,zmax,dt=dt)
 vessel_start = xmax/3.0
 vessel_end = xmax*2.0/3.0
 
+
+class Phasor:
+
+    colors = 'rgbkcmy'
+    pid = 0
+    
+    def __init__(self,magnitude=1.0,angle=0.0):
+        self.magnitude = magnitude
+        self.angle = angle
+        self.x = np.cos(self.angle)*self.magnitude
+        self.y = np.sin(self.angle)*self.magnitude
+        self.pid = Phasor.pid
+        Phasor.pid = Phasor.pid + 1
+        self.color = Phasor.colors[self.pid%len(Phasor.colors)]
+        
+    def plot(self,ax):
+        hl = 0.1
+        px = np.cos(self.angle)*(self.magnitude-hl)
+        py = np.sin(self.angle)*(self.magnitude-hl)
+        ax.arrow(0.0, 0.0, px, py, head_width=0.05, head_length=hl, fc=self.color, ec=self.color)
+        xlim = list(ax.get_xlim())
+        xlim[0] = min(xlim[0],-self.magnitude)
+        xlim[1] = max(xlim[1],self.magnitude)
+        ylim = list(ax.get_ylim())
+        ylim[0] = min(ylim[0],-self.magnitude)
+        ylim[1] = max(ylim[1],self.magnitude)
+        ax.set_xlim(xlim)
+        ax.set_ylim(ylim)
+        ax.set_aspect('equal')
+
+    def plot_context(self,ax):
+        ax.add_artist(plt.Circle((0,0),1.0,ec=[0.5,0.5,0.5],fill=False))
+        for ang in np.arange(0,2,0.25):
+            x = np.cos(ang*np.pi)
+            y = np.sin(ang*np.pi)
+            plt.text(x,y,'%0.2f $\pi$'%ang)
+        
+
+p1 = Phasor(1.0,np.pi/4.0)
+p2 = Phasor(1.0,np.pi/3.0)
+ax = plt.axes()
+ax.set_xlim((-1,1))
+ax.set_ylim((-1,1))
+p1.plot_context(ax)
+p1.plot(ax)
+p2.plot(ax)
+plt.show()
+sys.exit()
+        
+        
 for k in range(N_scatterers):
     #x0 = np.random.rand()*xmax
     x0 = dx/2.0 + dx*k
