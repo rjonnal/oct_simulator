@@ -24,7 +24,7 @@ class Scatterer:
             self.y = (self.y + self.vy*dt)%ymax
         if self.vz*zmax:
             self.z = (self.z + self.vz*dt)%zmax
-
+            
     def reset(self):
         self.x = self.x0
         self.y = self.y0
@@ -97,7 +97,7 @@ class Sample:
         plt.title('t=%0.3f'%self.t)
         plt.pause(.0001)
 
-    def plot(self,proj='xy',do_pause=True):
+    def plot_sample(self,proj='xy',do_pause=True):
         d1 = proj[0]
         d2 = proj[1]
         plt.cla()

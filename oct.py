@@ -210,9 +210,9 @@ class OCT:
         out.tofile(dfn)
         self.write_xml(xfn)
                     
-    def plot(self):
+    def plot(self,proj='xy'):
         plt.subplot(1,2,1)
-        self.sample.plot('xy',do_pause=False)
+        self.sample.plot(proj,do_pause=False)
         plt.plot(self.x,self.y,'ro')
         for s in self.find_scatterers():
             plt.plot(s.x,s.y,'bs')
@@ -221,6 +221,11 @@ class OCT:
         plt.plot(self.source.k,self.adu)
         plt.pause(.1)
 
+    def plot_spectrum(self,do_pause=True):
+        plt.cla()
+        plt.plot(self.source.k,self.adu)
+        if do_pause:
+            plt.pause(.1)
 
     
         
