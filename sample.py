@@ -17,6 +17,9 @@ class Scatterer:
         self.vz = vz
         self.coef = coef
 
+    def __str__(self):
+        return 'scatterer at (%0.1e,%0.1e,%0.1e)'%(self.x,self.y,self.z)
+
     def update(self,dt,xmax,ymax,zmax):
         if self.vx*xmax:
             self.x = (self.x + self.vx*dt)%xmax
@@ -46,6 +49,12 @@ class Sample:
         self.coef_min = np.inf
         self.dt = dt
 
+    def __str__(self):
+        out = 'Sample with size (%0.1e,%0.1e,%0.1e) and containing scatterers:\n'%(self.xmax,self.ymax,self.zmax)
+        for s in self.scatterers:
+            out = out + '\t' + s.__str__() + '\n'
+        return out
+    
     def add_scatterer(self,scatterer):
         if scatterer.coef<self.coef_min:
             self.coef_min = scatterer.coef
@@ -107,8 +116,10 @@ class Sample:
         #alpha = (alpha - self.coef_min)/(self.coef_max - self.coef_min)
         #plt.plot(x,y,'go',alpha=alpha)
         plt.plot(x,y,'go')
-        plt.xlim((eval('self.%smin'%d1),eval('self.%smax'%d1)))
-        plt.ylim((eval('self.%smin'%d2),eval('self.%smax'%d2)))
+        border1 = eval('self.%smax'%d1)*.25
+        border2 = eval('self.%smax'%d2)*.25
+        plt.xlim((eval('self.%smin'%d1)-border1,eval('self.%smax'%d1)+border1))
+        plt.ylim((eval('self.%smin'%d2)-border2,eval('self.%smax'%d2)+border2))
         plt.title('t=%0.3f'%self.t)
         if do_pause:
             plt.pause(.0001)

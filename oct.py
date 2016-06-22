@@ -37,7 +37,7 @@ class OCT:
         max_rad = np.sqrt(xmax**2+ymax**2)
         q = np.linspace(0,max_rad,2**16)
         self.radial_psf = np.exp(-q**2/(2*(self.psf_sigma**2)))
-        self.beam_radius = q[np.where(self.radial_psf<.05)[0][0]]
+        self.beam_radius = q[np.where(self.radial_psf>.05)[0][-1]]
         # make an empty depth profile and axis vector; these are
         # filled with scattering coefficients at imaging time
         # first compute maximum depth:
@@ -126,6 +126,7 @@ class OCT:
         self.z = self.z*0.0
         
         for s in scatterers:
+            print s
             if s.z<=self.zmax:
                 in_z_axis.append(s.z)
                 rad = np.sqrt((self.y-s.y)**2+(self.x-s.x)**2)
@@ -165,7 +166,6 @@ class OCT:
         return self.adu
 
     def update(self):
-        print self.x,self.y
         adu = self.compute_spectrum()
         self.sample.update()
         self.x = self.x + self.dx
