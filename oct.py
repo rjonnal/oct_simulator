@@ -15,7 +15,7 @@ e = 1.602176487e-19 #  C
 
 class OCT:
 
-    def __init__(self,source,sample,reference_fraction=0.9,ref_z_position=0.0,xmax=1.0e-3,ymax=1.0e-3,npx=512,dx=1e-5,dy=1e-5,dz=1e-6,nvol=1,nbm=1,dt=1e-5,pupil_diameter=6.75e-3,photons_per_adu=5e9):
+    def __init__(self,source,sample,reference_fraction=0.9,ref_z_position=0.0,xmax=1.0e-3,ymax=1.0e-3,npx=512,dx=1e-5,dy=1e-5,dz=1e-6,nvol=1,nbm=1,dt=1e-5,pupil_diameter=6.75e-3,photons_per_adu=5e9,noisy=True):
         self.source = source
         self.sample = sample
         self.r_frac = reference_fraction
@@ -53,6 +53,7 @@ class OCT:
         self.nbm = 1
         self.photons_per_adu = photons_per_adu
         self.dc = self.compute_dc()
+        self.noisy = noisy
         
     def write_xml(self,fn):
         monsterlist = ET.Element("MonsterList")
@@ -126,7 +127,6 @@ class OCT:
         self.z = self.z*0.0
         
         for s in scatterers:
-            print s
             if s.z<=self.zmax:
                 in_z_axis.append(s.z)
                 rad = np.sqrt((self.y-s.y)**2+(self.x-s.x)**2)
@@ -193,8 +193,9 @@ class OCT:
         self.y = ypos
         for ix in range(self.nx):
             adu = self.update()
-            noise = np.random.randn(len(adu))*np.sqrt(self.dc)
-            adu = adu + noise
+            if self.noisy:
+                noise = np.random.randn(len(adu))*np.sqrt(self.dc)
+                adu = adu + noise
             #plt.plot(adu-dc)
             #plt.plot(np.abs(np.fft.fftshift(np.fft.fft(adu-dc))))
             #plt.show()

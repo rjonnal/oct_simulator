@@ -11,10 +11,10 @@ zmax = 1e-4
 npx = 1024
 N_scatterers = 1000
 dx = xmax/float(N_scatterers)
-N_frames = 30
-outdir = './flow_example_frames'
+N_frames = 1
+outdir = './flow_example_slow_frames'
 
-do_simulation = False
+do_simulation = True
 stack_frames = False or do_simulation
 
 source = GaussianSpectrum(1e-3,740e-9,940e-9,npx,100e-9)
@@ -23,25 +23,9 @@ vessel_start = xmax/3.0
 vessel_end = xmax*2.0/3.0
 
 
-x = np.random.randn(30) + np.random.randn(30)*1j
-pg = PhasorGroup(x)
-ax = plt.axes()
-pg.plot(ax)
-plt.show()
-sys.exit()
+approx_z_sampling = 1.3e-6
+vz_base = approx_z_sampling/dt/1e3
 
-p1 = Phasor(1.0,np.pi/4.0)
-p2 = Phasor(1.0,np.pi/3.0)
-ax = plt.axes()
-ax.set_xlim((-1,1))
-ax.set_ylim((-1,1))
-p1.plot_context(ax)
-p1.plot(ax)
-p2.plot(ax)
-plt.show()
-sys.exit()
-        
-        
 for k in range(N_scatterers):
     #x0 = np.random.rand()*xmax
     x0 = dx/2.0 + dx*k
@@ -52,10 +36,11 @@ for k in range(N_scatterers):
     vy = 0.0
     vz = 0.0
     if vessel_start<x0<vessel_end:
-        vz = np.random.randn()*5e-5+5e-4
+        #vz = np.random.randn()*5e-5+5e-4
+        vz = vz_base + np.random.randn()*vz_base*0.05
     sample.add_scatterer(Scatterer(x0,y0,z0,vx,vy,vz,coef=1e-3))
 
-oct = OCT(source,sample,xmax=xmax,ymax=ymax,dt=dt,npx=npx,dx=xmax/100.0)
+oct = OCT(source,sample,xmax=xmax,ymax=ymax,dt=dt,npx=npx,dx=xmax/100.0,noisy=False)
 cutoff = round(zmax/oct.Sz/1.38)
 
 if do_simulation:
@@ -64,20 +49,19 @@ if do_simulation:
         outfn = os.path.join(outdir,'%03d.npy'%k)
         print outfn
         np.save(outfn,b)
-        continue
         b = b[npx/2:npx/2+cutoff,:]
         amp = np.abs(b)
         phase = np.angle(b)
-        plt.figure()
         plt.subplot(1,2,1)
+        plt.cla()
         plt.imshow(amp,interpolation='none',aspect='auto')
-        #plt.colorbar()
         plt.subplot(1,2,2)
+        plt.cla()
         plt.imshow(phase,interpolation='none',aspect='auto')
-        #plt.colorbar()
+        plt.pause(.1)
     #plt.show()
 
-
+sys.exit()
 def SNR(im):
     noise = np.std(np.hstack((im[:,0:30],im[:,70:])))
     return im/noise
