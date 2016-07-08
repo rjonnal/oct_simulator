@@ -2,7 +2,14 @@ import numpy as np
 from matplotlib import pyplot as plt
 from oct_simulator import *
 import sys,os
+import shutil
 
+noisy = 'noisy' in sys.argv
+try:
+    multiplier = float(sys.argv[-1])
+except:
+    multiplier = 1e-3
+    
 dt = 1e-5
 xmax = 1e-4
 ymax = 0
@@ -11,8 +18,8 @@ zmax = 1e-4
 npx = 1024
 N_scatterers = 1000
 dx = xmax/float(N_scatterers)
-N_frames = 1
-outdir = './flow_example_slow_frames'
+N_frames = 100
+outdir = '/home/rjonnal/data/Dropbox/Private/oct_simulations/flow_example_frames'
 
 do_simulation = True
 stack_frames = False or do_simulation
@@ -24,7 +31,9 @@ vessel_end = xmax*2.0/3.0
 
 
 approx_z_sampling = 1.3e-6
-vz_base = approx_z_sampling/dt/1e3
+vz_base = approx_z_sampling/dt*multiplier
+
+
 
 for k in range(N_scatterers):
     #x0 = np.random.rand()*xmax
@@ -40,8 +49,24 @@ for k in range(N_scatterers):
         vz = vz_base + np.random.randn()*vz_base*0.05
     sample.add_scatterer(Scatterer(x0,y0,z0,vx,vy,vz,coef=1e-3))
 
-oct = OCT(source,sample,xmax=xmax,ymax=ymax,dt=dt,npx=npx,dx=xmax/100.0,noisy=False)
+oct = OCT(source,sample,xmax=xmax,ymax=ymax,dt=dt,npx=npx,dx=xmax/100.0,noisy=True)
 cutoff = round(zmax/oct.Sz/1.38)
+
+if noisy:
+    noise_string = 'noisy'
+else:
+    noise_string = 'noiseless'
+
+vz_base_string = 'vz-%0.3e'%vz_base
+
+outdir = '%s_%s_%s'%(outdir,noise_string,vz_base_string)
+
+if os.path.exists(outdir):
+    shutil.rmtree(outdir)
+
+os.mkdir(outdir)
+
+
 
 if do_simulation:
     for k in range(N_frames):
@@ -58,8 +83,7 @@ if do_simulation:
         plt.subplot(1,2,2)
         plt.cla()
         plt.imshow(phase,interpolation='none',aspect='auto')
-        plt.pause(.1)
-    #plt.show()
+        plt.pause(.0000001)
 
 sys.exit()
 def SNR(im):
